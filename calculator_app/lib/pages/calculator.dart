@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:calculator_app/Model/button.dart';
+import 'package:math_expressions/math_expressions.dart';
 
 class Calculator extends StatefulWidget {
   const Calculator({Key? key}) : super(key: key);
@@ -32,13 +33,40 @@ class _CalculatorState extends State<Calculator> {
     '=',
   ];
 
+  String answer = '';
+  String question = '';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.deepPurple[100],
       body: Column(
         children: [
-          Expanded(child: Container()),
+          Expanded(
+              child: Container(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  height: 50,
+                ),
+                Container(
+                    padding: EdgeInsets.all(20),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      question,
+                      style: TextStyle(fontSize: 35),
+                    )),
+                Container(
+                    padding: EdgeInsets.all(20),
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      answer,
+                      style: TextStyle(fontSize: 35),
+                    )),
+              ],
+            ),
+          )),
           Expanded(
               flex: 2,
               child: Container(
@@ -47,19 +75,47 @@ class _CalculatorState extends State<Calculator> {
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4),
                       itemBuilder: (BuildContext context, int index) {
-                        if (buttons[index] == 'C') {
+                        if (index == 0) {
                           return MyButton(
+                              buttonTapped: () {
+                                setState(() {
+                                  question = '';
+                                  answer = '';
+                                });
+                              },
                               buttonText: buttons[index],
                               color: Colors.green,
                               textColor: Colors.white);
-                        } else if (buttons[index] == 'DEL') {
+                        } else if (index == 1) {
                           return MyButton(
+                            buttonTapped: () {
+                              setState(() {
+                                question =
+                                    question.substring(0, question.length - 1);
+                              });
+                            },
                             buttonText: buttons[index],
                             color: Colors.red,
                             textColor: Colors.white,
                           );
+                        } else if (index == buttons.length - 1) {
+                          return MyButton(
+                            buttonTapped: () {
+                              setState(() {
+                                equal();
+                              });
+                            },
+                            buttonText: buttons[index],
+                            color: Colors.deepPurple,
+                            textColor: Colors.white,
+                          );
                         } else {
                           return MyButton(
+                            buttonTapped: () {
+                              setState(() {
+                                question += buttons[index];
+                              });
+                            },
                             buttonText: buttons[index],
                             color: isOperator(buttons[index])
                                 ? Colors.deepPurple
@@ -80,5 +136,14 @@ class _CalculatorState extends State<Calculator> {
       return true;
     }
     return false;
+  }
+
+  void equal() {
+    question = question.replaceAll('x', '*');
+    Parser p = Parser();
+    Expression exp = p.parse(question);
+    ContextModel operator = ContextModel();
+    double eval = exp.evaluate(EvaluationType.REAL, operator);
+    answer = eval.toString();
   }
 }
